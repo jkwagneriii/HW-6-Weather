@@ -23,26 +23,36 @@
         <div class="row">
             <!-- This column will contain the search bar and subsiquent locations -->
             <div class="col-md-2">
-                Column 1
+                <form>
+                    <input type="text" id="city-input">
+                    <input class="btn btn-primary btn-lg" role="button" id="select-city" type="submit" value="Explore!">
+                </form>
             </div>
             <!-- This column will contain to additional rows -->
-            <div class="col-md-8">
+            <div class="col-md-8" id="main-weather">
                 Column 2
-                <div class="row"></div>
-                <div class="row"></div>
+                <div class="row" id="current-weather">
+                    <!-- Bootstrap jumbotron will be used for the main display -->
+                    <div class="jumbotron">
+                        <h2 id="city-name"></h2>
+                        <div id="city-name"></div>
+                        <div id="temp"></div>
+                        <div id="humid"></div>
+                        <div id="wind-speed"></div>
+                        <div id="uv-index"></div>
+                    </div>
+                </div>
+                <div class="row" id="five-day">
+                    <h2>5-Day Forcast</h2>
+
+                        <div>
+                            SPACE HOLDER
+                        </div>
+                        
+                </div>
             </div>
         </div>
     </div>
-
-
-
-
-
-    <!-- Bootstrap Search Form and Button -->
-    <!-- <form class="form-inline my-2 my-lg-0">
-        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-    </form> -->
 
     <script src="./script.js"></script>
 </body>
