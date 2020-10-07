@@ -1,5 +1,83 @@
 //First I need to create the divs for each section of weather information. There will be a header at the top of the page that doesn't need any sort of interaction. My first goal will be to get a single location to show the current weather. Then I'll move on to having the 5-Day forcast display. THEN I'll work on the city search bar and how that interacts with the weather being displayed. 
 
+//always start with document ready
+$(document).ready(function () {
+
+    //Global Scope
+    //Open Weather API Key
+    var apiKey = "fcef441d33f4bca0db59188a9ba59398";
+
+    //On click event for city values that have been appended onto the page.
+    $('.history').on('click', function() {
+        console.log('clicked history', $(this).text())
+        getMainWeather($(this).text())
+    })
+
+    //On click event for the main search bar
+    $("#select-city").on("click", function (e) {
+        e.preventDefault()
+        getMainWeather($("#city-input").val())
+        //append the history! each button will have a class of history
+        //123
+    })
+
+    //Retrieving the main up to date weather info from the API.
+    function getMainWeather(city) {
+        var userInput = city
+        var queryURL = "https://api.openweathermap.org/data/2.5/weather?q=" + userInput + "&appid=" + apiKey + "&units=imperial";
+
+        $.ajax({
+            url: queryURL,
+            method: "GET"
+        }).then(function (response) {
+            //Punching the API value into the empty HTML elements with jquery
+            $("#city-name").text(response.name + " " + moment().format('MMMM Do YYYY'));
+            $("#temp").text("Temperature " + response.main.temp + "℉");
+            $("#humid").text("Humidity " + response.main.humidity + "%");
+            $("#wind-speed").text("Wind Speed " + response.wind.speed + "MPH");
+            //Call the getUV function
+            getUv(response.coord.lon, response.coord.lat)
+        })
+    }
+
+    //The UV requires a seperate API link. This function allows the data to be called in the main weather function without taking up extra space.
+    function getUv(lon,lat) {
+        
+        var uvQueryUrl = "http://api.openweathermap.org/data/2.5/uvi?lat=" + lat + "&lon=" + lon + "&appid=" + apiKey
+
+        $.ajax({
+            url: uvQueryUrl,
+            method: "GET"
+        }).then(function (response) {
+            $("#uv-index").text("UV Index " + response.value)
+            //Call the fiveDay function
+            fiveDay($("#city-input").val())
+        })
+    }
+
+    //The future weather data requires a seperate API link. This function allows the data to be called in the main weather function without taking up extra space.
+    // function fiveDay(city) {
+    //     console.log('time to get 5day stuff!!!');
+    //     // ajax time for 5 day
+    //     var userInput = city
+    //     var fiveDayQueryUrl = "http://api.openweathermap.org/data/2.5/forecast/daily?q=" + userInput + "&cnt=5&appid=" + apiKey;
+
+    //     $.ajax({
+    //         url: fiveDayQueryUrl,
+    //         method: "GET"
+    //     }).then(function (response) {
+    //         console.log(response);
+    //         // $("#five-day").text(response)
+    //     })
+
+    // }
+
+
+});
+
+
+
+
 
 
 
