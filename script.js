@@ -18,7 +18,18 @@ $(document).ready(function () {
         e.preventDefault()
         getMainWeather($("#city-input").val())
         //append the history! each button will have a class of history
+        //Odd issue happening here, buttons keep prepending inside of themselves. Gotta work on this.
         //123
+        //1 Create an html element with jquery
+        var cityHistory = $("<button>");
+
+        //2 dress it up
+        cityHistory.addClass("history");
+        cityHistory.text($("#city-input").val());
+
+        //3 append it to the page
+        $(".history").prepend(cityHistory);
+
     })
 
     //Retrieving the main up to date weather info from the API.
@@ -51,26 +62,27 @@ $(document).ready(function () {
         }).then(function (response) {
             $("#uv-index").text("UV Index " + response.value)
             //Call the fiveDay function
-            fiveDay($("#city-input").val())
+            fiveDay(response.coord.lon, response.coord.lat)
         })
     }
 
-    //The future weather data requires a seperate API link. This function allows the data to be called in the main weather function without taking up extra space.
-    // function fiveDay(city) {
-    //     console.log('time to get 5day stuff!!!');
-    //     // ajax time for 5 day
-    //     var userInput = city
-    //     var fiveDayQueryUrl = "http://api.openweathermap.org/data/2.5/forecast/daily?q=" + userInput + "&cnt=5&appid=" + apiKey;
+    // The future weather data requires a seperate API link. This function allows the data to be called in the main weather function without taking up extra space. Having trouble getting the lon to read properly.
+    function fiveDay(lon,lat) {
+        console.log('time to get 5day stuff!!!');
+        //USE THIS MAYBE??
+        
+        var fiveDayQueryUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=&appid=${apiKey}`;
+        console.log(fiveDayQueryUrl);
 
-    //     $.ajax({
-    //         url: fiveDayQueryUrl,
-    //         method: "GET"
-    //     }).then(function (response) {
-    //         console.log(response);
-    //         // $("#five-day").text(response)
-    //     })
+        $.ajax({
+            url: fiveDayQueryUrl,
+            method: "GET"
+        }).then(function (response) {
+            console.log(response);
+            $("#five-day").text(response)
+        })
 
-    // }
+    }
 
 
 });
