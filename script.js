@@ -1,103 +1,141 @@
-//First I need to create the divs for each section of weather information. There will be a header at the top of the page that doesn't need any sort of interaction. My first goal will be to get a single location to show the current weather. Then I'll move on to having the 5-Day forcast display. THEN I'll work on the city search bar and how that interacts with the weather being displayed. 
+// OPEN WEATHER API 
+var APIKey = "fcef441d33f4bca0db59188a9ba59398"; 
 
-//always start with document ready
-$(document).ready(function () {
+// MUST USE lat and lon FOR UV API
+function UvIndex(lat, lon){
+    var queryURLUVIndex = "https://api.openweathermap.org/data/2.5/uvi?&appid=e79e860f1526eb9cc2572046fff7a30c&lat=" + lat  + "&lon=" + lon;
 
-    //Global Scope
-    //Open Weather API Key
-    var apiKey = "fcef441d33f4bca0db59188a9ba59398";
+    $.ajax({
+        url:queryURLUVIndex,
+        method: "GET"
+    }).then(function (response) {
+        uvBackground(response.value)
+    });
+};
 
-    //On click event for city values that have been appended onto the page.
-    $('.history').on('click', function() {
-        console.log('clicked history', $(this).text())
-        getMainWeather($(this).text())
-    })
+// SWITCH FOR UV COLOR
+function uvBackground(uvRes) {
+    $("#uv-index-results").text(uvRes);
+    switch (
+        true
+    ) {
+        case (1 < uvRes && uvRes < 2):
+            $("#uv-index-results").css("background-color", "green");
+            break;
+        case (3 < uvRes && uvRes < 5):
+            $("#uv-index-results").css("background-color", "yellow");
+            break;
+        case (6 < uvRes && uvRes < 7):
+            $("#uv-index-results").css("background-color", "orange");
+            break;
+        case (8 < uvRes && uvRes < 10):
+            $("#uv-index-results").css("background-color", "red");
+            break;
+        case (10 < uvRes):
+            $("#uv-index-results").css("background-color", "purple");
+            break;
+    };
+};
 
-    //On click event for the main search bar
-    $("#select-city").on("click", function (e) {
-        e.preventDefault()
-        getMainWeather($("#city-input").val())
-        //append the history! each button will have a class of history
-        //Odd issue happening here, buttons keep prepending inside of themselves. Gotta work on this.
-        //123
-        //1 Create an html element with jquery
-        var cityHistory = $("<button>");
+function getForecast(userInput){
+    var queryURLForecast = "https://api.openweathermap.org/data/2.5/forecast?q=" + userInput + "&appid=" + APIKey;
 
-        //2 dress it up
-        cityHistory.addClass("history");
-        cityHistory.text($("#city-input").val());
+    $.ajax({
+        url: queryURLForecast,
+        method: "GET"
+    }).then(function(response) {
+        for(var i =0; i< response.list.length; i++) {
+            // CREATE 
+            var dayContainer = $('<div>')
+            var rawDate = response.list[i].dt_txt;
+            var splitForecastDate = rawDate.split(" ");
 
-        //3 append it to the page
-        $(".history").prepend(cityHistory);
+            if(splitForecastDate[1] === '09:00:00') {
+                // ATTRIBUTES
+                var forecastDate = moment(splitForecastDate[0]).format("MM/DD/YYYY");
+                dayContainer.addClass('col-2 forecast')
+                var forecastWeatherIcon = response.list[i].weather[0].icon;
+                var forecastIconURL = "http://openweathermap.org/img/w/" + forecastWeatherIcon + ".png";
+                forecastIconEl = $("<img>").attr("src", forecastIconURL);
+    
+                var forecastTempK = response.list[i].main.temp;
+                var forecastTempC = (forecastTempK - 273.15)*1.80+32;
+                var forecastHum = response.list[i].main.humidity;
+                var day = i + 1
+    
+                // APPEND
+                $("#forecast-day-" + day).append(forecastDate);
+                $("#forecast-day-" + day).append(forecastIconEl);
+                $("#forecast-day-" + day).append("<p>" + "Temperature: " + forecastTempC.toFixed(2) + " °F");
+                $("#forecast-day-" + day).append("<p>" + "Humidity: " + forecastHum + "%")
+    
+                dayContainer.append(
+                    forecastDate,
+                    forecastIconEl,
+                    "<p>" + "Temperature: " + forecastTempC.toFixed(2) + " °F", 
+                    "<p>" + "Humidity: " + forecastHum + "%"
+                )
+                $('.day-rows').append(dayContainer)
+            };
+        };
+    });
+};
 
-    })
+function searchWeather(name) {
 
-    //Retrieving the main up to date weather info from the API.
-    function getMainWeather(city) {
-        var userInput = city
-        var queryURL = "https://api.openweathermap.org/data/2.5/weather?q=" + userInput + "&appid=" + apiKey + "&units=imperial";
+    var userInput = name
+    var queryURL = "https://api.openweathermap.org/data/2.5/weather?q="+ userInput+"&appid=" + APIKey;
 
-        $.ajax({
-            url: queryURL,
-            method: "GET"
-        }).then(function (response) {
-            //Punching the API value into the empty HTML elements with jquery
-            $("#city-name").text(response.name + " " + moment().format('MMMM Do YYYY'));
-            $("#temp").text("Temperature " + response.main.temp + "℉");
-            $("#humid").text("Humidity " + response.main.humidity + "%");
-            $("#wind-speed").text("Wind Speed " + response.wind.speed + "MPH");
-            //Call the getUV function
-            getUv(response.coord.lon, response.coord.lat)
-        })
-    }
+    $.ajax({
+        url: queryURL,
+        method: "GET"
+    }).then(function(response) {
 
-    //The UV requires a seperate API link. This function allows the data to be called in the main weather function without taking up extra space.
-    function getUv(lon,lat) {
-        
-        var uvQueryUrl = "http://api.openweathermap.org/data/2.5/uvi?lat=" + lat + "&lon=" + lon + "&appid=" + apiKey
+        $("#city-name").empty();
+        $("#uv-index-results").empty();
+        $(".day-rows").empty();
 
-        $.ajax({
-            url: uvQueryUrl,
-            method: "GET"
-        }).then(function (response) {
-            $("#uv-index").text("UV Index " + response.value)
-            //Call the fiveDay function
-            fiveDay(response.coord.lon, response.coord.lat)
-        })
-    }
+        // CURRENT WEATHER
+        var cityName = $("<div>").text(response.name); 
+        var weatherIcon = response.weather[0].icon;
+        var iconURL = "http://openweathermap.org/img/w/" + weatherIcon + ".png";
+        iconEl = $("<img>").attr("src", iconURL);
+        var tempK = response.main.temp;
+        var tempC = (tempK - 273.15)*1.80+32;
+        var humidity = response.main.humidity;
+        var windSpeed = response.wind.speed;
 
-    // The future weather data requires a seperate API link. This function allows the data to be called in the main weather function without taking up extra space. Having trouble getting the lon to read properly.
-    function fiveDay(lon,lat) {
-        console.log('time to get 5day stuff!!!');
-        //USE THIS MAYBE??
-        
-        var fiveDayQueryUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=&appid=${apiKey}`;
-        console.log(fiveDayQueryUrl);
+        // APPEND 
+        $("#city-name").empty(); 
+        $("#city-name").append(cityName); 
+        $(cityName).addClass("city-name-style");
+        $(cityName).append(iconEl);
+        $("#city-name").append("<p>" + "Temperature: " + tempC.toFixed(2) + " °F");
+        $("#city-name").append("<p>" + "Humidity: " + humidity + " %");
+        $("#city-name").append("<p>" + "Wind Speed: " + windSpeed + " MPH");
 
-        $.ajax({
-            url: fiveDayQueryUrl,
-            method: "GET"
-        }).then(function (response) {
-            console.log(response);
-            $("#five-day").text(response)
-        })
+       // MUST USE lat and lon RESPONSE FOR UV
+        lat = response.coord.lat;
+        lon = response.coord.lon;     
+        UvIndex(lat, lon)
+        getForecast(userInput)
+    });
+    //LOCAL STORAGE
+    localStorage.setItem("userChoice", userInput);
+    var storedUserAnswer = localStorage.getItem("userChoice");
+    $("#past-searches").append("<p class='history'>" + storedUserAnswer + "</p>");
+};
 
-    }
-
-
+// CURRENT WEATHER
+$("#select-city").on("click", function(event) { 
+    event.preventDefault();
+    var inputCity = $("#city-input").val().trim();
+    searchWeather(inputCity);
 });
 
-
-
-
-
-
-
-
-
-//By city name
-// You can search weather forecast for 5 days with data every 3 hours by city name. All weather data can be obtained in JSON and XML formats.
-// api.openweathermap.org/data/2.5/forecast?q={city name}&appid={API key}
-
-// Call current UV data By geographic coordinates
-// ("http://api.openweathermap.org/data/2.5/uvi?lat={lat}&lon={lon}&appid={API key}")
+// SEARCH PREVIOUS CITIES
+$(document).on('click', '.history', function() {
+    event.preventDefault();
+    var inputCity = $(this).text().trim();
+    searchWeather(inputCity);
+});
