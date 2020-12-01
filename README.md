@@ -15,6 +15,8 @@ This is a homework assignment for the Northwestern University Coding Program. It
 ## Active URLS
 [Github Repository](https://github.com/jkwagneriii/HW-6-Weather)
 
+[GitHub Live Page](https://jkwagneriii.github.io/HW-6-Weather/)
+
 ## Resources
 [Open Weather API](https://openweathermap.org/api)
 
